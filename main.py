@@ -90,14 +90,17 @@ def compare_pools(word, all_words):
         clue_set: len(determine_pool(word, clue_set, all_words))
         for clue_set in clue_options
     }
-    return pool_sizes2
+    return pool_sizes
 
 
-def play(pool_sizes: dict):
+def play(pool_sizes: dict, turn: int):
     # given computed pool sizes, choose a suitable narrowing-of-pool and
     # issue clues.
     cluesets_by_value = sorted(pool_sizes.keys(), key=lambda k: pool_sizes[k])
-    cluesets_viable = list(filter(lambda x: pool_sizes[x] > 10, cluesets_by_value))
+    cluesets_viable = list(filter(lambda x: pool_sizes[x] > turn, cluesets_by_value))
+    if len(cluesets_viable) < 1:
+        # The game is "lost" at this point-- not enough words to finish
+        return "ggggg"
     midpoint = len(cluesets_viable) // 2
     return cluesets_viable[midpoint]
 
@@ -123,11 +126,18 @@ if __name__ == "__main__":
     #     word2 = input("guess: ")
     #     print(multifmt(word2, score(word2, word1)))
 
-    for _ in range(6):
-        guess = input(">")
-        poolz = compare_pools(guess, all_words)
-        clueset = play(poolz)
-        print(multifmt(guess, clueset), f"Remaining: {poolz[clueset]}")
+    prev_guesses = []
+    words_pool = all_words
+    for turn in range(6, 0, -1):
+        while True:
+            guess = input(">")
+            if guess in all_words and guess not in prev_guesses:
+                prev_guesses += guess
+                break
+        poolz = compare_pools(guess, words_pool)
+        clueset = play(poolz, turn)
+        words_pool = determine_pool(guess, clueset, words_pool)
+        print(multifmt(guess, clueset), f"Remaining: {len(words_pool)}")
 
     # breakpoint()
 
