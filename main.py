@@ -1,6 +1,6 @@
 from enum import StrEnum
+import array
 import itertools
-from collections import defaultdict
 
 
 Clue = StrEnum("Clue", names="g y n")
@@ -36,24 +36,28 @@ def multifmt(s: str, seq: str):
     return ret
 
 
-def score(word, target):
+def score(word: str, target: str):
     score_result = [Clue.n] * 5
-    # Frequency table
-    freq = defaultdict(int)
-    for target_letter in target:
-        freq[target_letter] += 1
-
+    # Frequency table for "target"
+    freq = array.array('b', b'\x00' * 26)
+    for b in target.encode():
+        freq[b-97] += 1
+    # freq = defaultdict(int)
+    # for target_letter in target:
+    #     freq[target_letter] += 1
     # Green pass
     for i in range(5):
         if word[i] == target[i]:
             score_result[i] = Clue.g
-            freq[target[i]] -= 1
+            freq[ord(target[i])-97] -= 1
 
     # Yellow pass
-    intersection = set(word) & set(target)
-    for i, w_letter in enumerate(word):
-        if (w_letter in intersection) and score_result[i] == Clue.n and freq[w_letter] > 0:
-            score_result[i] = Clue.y
+    for i in range(5):
+        if score_result[i] is Clue.n:
+            fi = ord(word[i]) - 97
+            if freq[fi] > 0:
+                score_result[i] = Clue.y
+                freq[fi] -= 1
 
     return score_result
 
@@ -61,7 +65,13 @@ def score(word, target):
 def determine_pool(word, clues, all_words):
     # Find all words that could be solutions, given a particular word and set of clues.
     def equality(c1, c2):
-        return all([ca == cb for ca, cb in zip(c1, c2)])
+        return (
+            c1[0] == c2[0]
+            and c1[1] == c2[1]
+            and c1[2] == c2[2]
+            and c1[3] == c2[3]
+            and c1[4] == c2[4]
+        )
 
     eligible_words = [
         w for w in all_words
@@ -80,7 +90,16 @@ def compare_pools(word, all_words):
         clue_set: len(determine_pool(word, clue_set, all_words))
         for clue_set in clue_options
     }
-    ...
+    return pool_sizes2
+
+
+def play(pool_sizes: dict):
+    # given computed pool sizes, choose a suitable narrowing-of-pool and
+    # issue clues.
+    cluesets_by_value = sorted(pool_sizes.keys(), key=lambda k: pool_sizes[k])
+    cluesets_viable = list(filter(lambda x: pool_sizes[x] > 10, cluesets_by_value))
+    midpoint = len(cluesets_viable) // 2
+    return cluesets_viable[midpoint]
 
 
 if __name__ == "__main__":
@@ -99,7 +118,18 @@ if __name__ == "__main__":
     #     print("Pool has: ", len(pool))
     #     print(", ".join(pool))
 
-    word = "stoat"
-    compare_pools(word, all_words)
+    # while True:
+    #     word1 = input("hidden word: ")
+    #     word2 = input("guess: ")
+    #     print(multifmt(word2, score(word2, word1)))
+
+    for _ in range(6):
+        guess = input(">")
+        poolz = compare_pools(guess, all_words)
+        clueset = play(poolz)
+        print(multifmt(guess, clueset), f"Remaining: {poolz[clueset]}")
 
     # breakpoint()
+
+    # for p in poolz:
+    #     print(multifmt(word, p), poolz[p])
