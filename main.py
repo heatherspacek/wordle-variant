@@ -115,7 +115,7 @@ class GameApp(App):
         yield RichLog()
 
     def on_key(self, event: events.key):
-        self.query_one(RichLog).write(event.character)
+        pass
 
 
 if __name__ == "__main__":
