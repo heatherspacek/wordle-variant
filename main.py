@@ -159,18 +159,31 @@ class GameApp(App):
 
     wordpool = []
     loaded_guess = []
+    prev_guesses = []
     guess_n = 0
+
+    def __init__(self):
+        with open("data/answers.txt") as f:
+            answer_words = f.read().splitlines()
+        with open("data/guesses.txt") as f:
+            legal_but_not_answer_words = f.read().splitlines()
+        self.all_words = sorted(answer_words + legal_but_not_answer_words)
+
+        self.wordpool = self.all_words
+
+        super().__init__()
 
     def compose(self) -> ComposeResult:
         yield Static(TITLE_ART, id="title")
         with Collapsible(title="Rules"):
             yield Static("Be yourself and have fun.")
-        # yield RichLog()
         with Vertical(id="main-container"):
             for row_n in range(6):
                 with Horizontal(id=f"horz-{row_n}"):
                     for _ in range(5):
                         yield Letter(" ")
+        with Collapsible(title="Possible Words Remaining"):
+            yield RichLog()
 
     def on_key(self, ev):
         self.set_focus(None)
@@ -178,14 +191,48 @@ class GameApp(App):
             if len(self.loaded_guess) > 0:
                 _ = self.loaded_guess.pop()
         elif ev.key == "enter":
-            self.notify("you clicked enter 😳")
+            log = self.query_one(RichLog)
+            guess_input = "".join(self.loaded_guess)
+            if len(guess_input) != 5:
+                self.notify("Five letters please!")
+            elif guess_input not in self.all_words:
+                self.notify(f"{guess_input.upper()} not in word-list.")
+            elif guess_input in self.prev_guesses:
+                self.notify(f"{guess_input.upper()} was used already.")
+            elif False:
+                # Test whether all greens and yellows were used!
+                ...
+            else:
+                # Accept and score it.
+                poolz = compare_pools(guess_input, self.wordpool)
+                clueset = play(poolz, 6 - self.guess_n)
+                self.wordpool = determine_pool(guess_input, clueset, self.wordpool)
+                log.clear()
+                log.write(f"Cluelist leaves {len(self.wordpool)} words remaining.")
+                log.write(self.wordpool)
+                for i, letter_widget in enumerate(
+                    self.query(f"#horz-{self.guess_n} Letter").results(Letter)
+                ):
+                    match clueset[i]:
+                        case "n":
+                            letter_widget.add_class("white")
+                        case "g":
+                            letter_widget.add_class("green")
+                        case "y":
+                            letter_widget.add_class("yellow")
+
+                self.guess_n += 1
+                self.loaded_guess = []
+                self.prev_guesses.append(guess_input)
+
         elif ev.character and ev.character.lower() in "abcdefghijklmniopqrstuvwxyz":
             if len(self.loaded_guess) < 5:
                 self.loaded_guess.append(ev.character.lower())
-                self.query_one(Letter).update(ev.character.upper())
                 # self.query_one(Letter).add_class("green")
 
-        for i, letter_widget in enumerate(self.query("#horz-0 Letter").results()):
+        for i, letter_widget in enumerate(
+            self.query(f"#horz-{self.guess_n} Letter").results(Letter)
+        ):
             if i >= len(self.loaded_guess):
                 letter_widget.update(" ")
             else:
@@ -199,8 +246,8 @@ if __name__ == "__main__":
     # with open("data/guesses.txt") as f:
     #     legal_but_not_answer_words = f.read().splitlines()
     # all_words = sorted(answer_words + legal_but_not_answer_words)
-
     # prev_guesses = []
+
     # words_pool = all_words
     # for turn in range(6, 0, -1):
     #     while True:
