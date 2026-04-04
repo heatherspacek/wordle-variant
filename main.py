@@ -1,3 +1,7 @@
+from textual.app import App, ComposeResult
+from textual.screen import Screen
+from textual.widgets import Static
+
 from enum import StrEnum
 import array
 import itertools
@@ -105,6 +109,17 @@ def play(pool_sizes: dict, turn: int):
     return cluesets_viable[midpoint]
 
 
+class GameScreen(Screen):
+    def compose(self) -> ComposeResult:
+        yield Static("hello world! :)")
+
+
+class ClientApp(App):
+    MODES = {
+        "game": GameScreen
+    }
+
+
 if __name__ == "__main__":
 
     with open("data/answers.txt") as f:
@@ -113,33 +128,18 @@ if __name__ == "__main__":
         legal_but_not_answer_words = f.read().splitlines()
     all_words = sorted(answer_words + legal_but_not_answer_words)
 
-    # while True:
-    #     word = input("start word > ")
-    #     clues = input("clues: >")
-    #     print(multifmt(word, clues))
-    #     pool = determine_pool(word, clues, all_words)
-    #     print("Pool has: ", len(pool))
-    #     print(", ".join(pool))
+    # prev_guesses = []
+    # words_pool = all_words
+    # for turn in range(6, 0, -1):
+    #     while True:
+    #         guess = input(">")
+    #         if guess in all_words and guess not in prev_guesses:
+    #             prev_guesses += guess
+    #             break
+    #     poolz = compare_pools(guess, words_pool)
+    #     clueset = play(poolz, turn)
+    #     words_pool = determine_pool(guess, clueset, words_pool)
+    #     print(multifmt(guess, clueset), f"Remaining: {len(words_pool)}")
 
-    # while True:
-    #     word1 = input("hidden word: ")
-    #     word2 = input("guess: ")
-    #     print(multifmt(word2, score(word2, word1)))
-
-    prev_guesses = []
-    words_pool = all_words
-    for turn in range(6, 0, -1):
-        while True:
-            guess = input(">")
-            if guess in all_words and guess not in prev_guesses:
-                prev_guesses += guess
-                break
-        poolz = compare_pools(guess, words_pool)
-        clueset = play(poolz, turn)
-        words_pool = determine_pool(guess, clueset, words_pool)
-        print(multifmt(guess, clueset), f"Remaining: {len(words_pool)}")
-
-    # breakpoint()
-
-    # for p in poolz:
-    #     print(multifmt(word, p), poolz[p])
+    app = ClientApp()
+    app.run()
