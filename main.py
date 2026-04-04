@@ -115,8 +115,20 @@ class Letter(Static):
 Letter {
     width: 5;
     height: 3;
-    border: $secondary tall;
+    border: $secondary round;
     content-align: center middle;
+}
+Letter.green {
+  background: green;
+  color: white;
+}
+Letter.yellow {
+  background: yellow;
+  color: black;
+}
+Letter.white {
+  background: white;
+  color: black;
 }
 """
 
@@ -130,20 +142,34 @@ Screen {
     """
 
     wordpool = []
-    loaded_guess = [" "] * 5
+    loaded_guess = []
     guess_n = 0
 
     def compose(self) -> ComposeResult:
-        yield Static("TITLE")
+        yield Static("GAY WORDLE")
+        # yield RichLog()
         with Vertical():
-            for _ in range(6):
-                with Horizontal():
+            for row_n in range(6):
+                with Horizontal(id=f"horz-{row_n}"):
                     for _ in range(5):
                         yield Letter(" ")
 
-    def on_key(self, event):
-        if event.character.lower() in "abcdefghijklmniopqrstuvwxyz":
-            self.query_one(Letter).update(event.character.upper())
+    def on_key(self, ev):
+        if ev.key == "backspace":
+            if len(self.loaded_guess) > 0:
+                _ = self.loaded_guess.pop()
+        elif ev.key == "enter":
+            ...
+        elif ev.character and ev.character.lower() in "abcdefghijklmniopqrstuvwxyz":
+            if len(self.loaded_guess) < 5:
+                self.loaded_guess.append(ev.character.lower())
+                self.query_one(Letter).update(ev.character.upper())
+                # self.query_one(Letter).add_class("green")
+
+        for i, letter_widget in enumerate(self.query("#horz-0 Letter").results()):
+            if i >= len(self.loaded_guess):
+                break
+            letter_widget.update(self.loaded_guess[i].upper())
 
 
 if __name__ == "__main__":
