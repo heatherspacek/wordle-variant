@@ -1,5 +1,6 @@
 from textual.app import App, ComposeResult
 # from textual.screen import Screen
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Static, RichLog
 
 from enum import StrEnum
@@ -109,14 +110,40 @@ def play(pool_sizes: dict, turn: int):
     return cluesets_viable[midpoint]
 
 
+class Letter(Static):
+    DEFAULT_CSS = """
+Letter {
+    width: 5;
+    height: 3;
+    border: $secondary tall;
+    content-align: center middle;
+}
+"""
+
+
 class GameApp(App):
+
+    DEFAULT_CSS = """\
+Screen {
+    align: center middle;
+}
+    """
+
+    wordpool = []
+    loaded_guess = [" "] * 5
+    guess_n = 0
 
     def compose(self) -> ComposeResult:
         yield Static("TITLE")
-        yield RichLog()
+        with Vertical():
+            for _ in range(6):
+                with Horizontal():
+                    for _ in range(5):
+                        yield Letter(" ")
 
     def on_key(self, event):
-        self.query_one(RichLog).write(event)
+        if event.character.lower() in "abcdefghijklmniopqrstuvwxyz":
+            self.query_one(Letter).update(event.character.upper())
 
 
 if __name__ == "__main__":
