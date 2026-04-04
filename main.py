@@ -1,6 +1,7 @@
+from textual import events
 from textual.app import App, ComposeResult
-from textual.screen import Screen
-from textual.widgets import Static
+# from textual.screen import Screen
+from textual.widgets import Static, RichLog
 
 from enum import StrEnum
 import array
@@ -109,15 +110,12 @@ def play(pool_sizes: dict, turn: int):
     return cluesets_viable[midpoint]
 
 
-class GameScreen(Screen):
+class GameApp(App):
     def compose(self) -> ComposeResult:
-        yield Static("hello world! :)")
+        yield RichLog()
 
-
-class ClientApp(App):
-    MODES = {
-        "game": GameScreen
-    }
+    def on_key(self, event: events.key):
+        self.query_one(RichLog).write(event.character)
 
 
 if __name__ == "__main__":
@@ -141,5 +139,5 @@ if __name__ == "__main__":
     #     words_pool = determine_pool(guess, clueset, words_pool)
     #     print(multifmt(guess, clueset), f"Remaining: {len(words_pool)}")
 
-    app = ClientApp()
+    app = GameApp()
     app.run()
