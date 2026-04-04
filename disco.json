@@ -3,7 +3,7 @@
     "services": {
         "web": {
             "port": 8000,
-            "command": "uv run python src/serve.py"
+            "command": "uv run pypy3 serve.py"
         }
     }
 }
