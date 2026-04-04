@@ -122,11 +122,11 @@ class ClientApp(App):
 
 if __name__ == "__main__":
 
-    with open("data/answers.txt") as f:
-        answer_words = f.read().splitlines()
-    with open("data/guesses.txt") as f:
-        legal_but_not_answer_words = f.read().splitlines()
-    all_words = sorted(answer_words + legal_but_not_answer_words)
+    # with open("data/answers.txt") as f:
+    #     answer_words = f.read().splitlines()
+    # with open("data/guesses.txt") as f:
+    #     legal_but_not_answer_words = f.read().splitlines()
+    # all_words = sorted(answer_words + legal_but_not_answer_words)
 
     # prev_guesses = []
     # words_pool = all_words
