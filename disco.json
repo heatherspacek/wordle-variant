@@ -1,0 +1,9 @@
+{
+    "version": "1.0",
+    "services": {
+        "web": {
+            "port": 8000,
+            "command": "uv run python src/serve.py"
+        }
+    }
+}
