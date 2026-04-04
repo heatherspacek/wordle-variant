@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 # from textual.screen import Screen
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Static, RichLog
+from textual.widgets import Static, RichLog, Collapsible
 
 from enum import StrEnum
 import array
@@ -133,11 +133,27 @@ Letter.white {
 """
 
 
+TITLE_ART = """\
+░██████╗░██████╗░██╗░░░██╗░█████╗░███╗░░██╗██████╗░██╗░░░░░███████╗
+██╔════╝██╔═══██╗██║░░░██║██╔══██╗████╗░██║██╔══██╗██║░░░░░██╔════╝
+╚█████╗░██║██╗██║██║░░░██║███████║██╔██╗██║██║░░██║██║░░░░░█████╗░░
+░╚═══██╗╚██████╔╝██║░░░██║██╔══██║██║╚████║██║░░██║██║░░░░░██╔══╝░░
+██████╔╝░╚═██╔═╝░╚██████╔╝██║░░██║██║░╚███║██████╔╝███████╗███████╗
+╚═════╝░░░░╚═╝░░░░╚═════╝░╚═╝░░╚═╝╚═╝░░╚══╝╚═════╝░╚══════╝╚══════╝\
+"""
+
+
 class GameApp(App):
 
     DEFAULT_CSS = """\
-Screen {
-    align: center middle;
+* {
+    align: center top;
+}
+#title {
+    content-align: center top;
+}
+#main-container {
+    height:18;
 }
     """
 
@@ -146,9 +162,11 @@ Screen {
     guess_n = 0
 
     def compose(self) -> ComposeResult:
-        yield Static("GAY WORDLE")
+        yield Static(TITLE_ART, id="title")
+        with Collapsible(title="Rules"):
+            yield Static("Be yourself and have fun.")
         # yield RichLog()
-        with Vertical():
+        with Vertical(id="main-container"):
             for row_n in range(6):
                 with Horizontal(id=f"horz-{row_n}"):
                     for _ in range(5):
@@ -159,7 +177,7 @@ Screen {
             if len(self.loaded_guess) > 0:
                 _ = self.loaded_guess.pop()
         elif ev.key == "enter":
-            ...
+            self.notify("you clicked enter 😳")
         elif ev.character and ev.character.lower() in "abcdefghijklmniopqrstuvwxyz":
             if len(self.loaded_guess) < 5:
                 self.loaded_guess.append(ev.character.lower())
@@ -168,8 +186,9 @@ Screen {
 
         for i, letter_widget in enumerate(self.query("#horz-0 Letter").results()):
             if i >= len(self.loaded_guess):
-                break
-            letter_widget.update(self.loaded_guess[i].upper())
+                letter_widget.update(" ")
+            else:
+                letter_widget.update(self.loaded_guess[i].upper())
 
 
 if __name__ == "__main__":
