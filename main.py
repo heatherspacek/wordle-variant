@@ -173,6 +173,7 @@ class GameApp(App):
                         yield Letter(" ")
 
     def on_key(self, ev):
+        self.set_focus(None)
         if ev.key == "backspace":
             if len(self.loaded_guess) > 0:
                 _ = self.loaded_guess.pop()
