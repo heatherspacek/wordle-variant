@@ -162,6 +162,8 @@ class GameApp(App):
     prev_guesses = []
     guess_n = 0
 
+    gameover = False
+
     def __init__(self):
         with open("data/answers.txt") as f:
             answer_words = f.read().splitlines()
@@ -186,6 +188,9 @@ class GameApp(App):
             yield RichLog()
 
     def on_key(self, ev):
+        if self.gameover:
+            return
+
         self.set_focus(None)
         if ev.key == "backspace":
             if len(self.loaded_guess) > 0:
@@ -193,19 +198,29 @@ class GameApp(App):
         elif ev.key == "enter":
             log = self.query_one(RichLog)
             guess_input = "".join(self.loaded_guess)
+            if self.prev_guesses:
+                last_clues = self.last_clueset
+                last_guess = self.prev_guesses[-1]
+                mandatory_letters = [g for (c, g) in zip(last_clues, last_guess) if c != "n"]
+
             if len(guess_input) != 5:
                 self.notify("Five letters please!")
             elif guess_input not in self.all_words:
                 self.notify(f"{guess_input.upper()} not in word-list.")
             elif guess_input in self.prev_guesses:
                 self.notify(f"{guess_input.upper()} was used already.")
-            elif False:
-                # Test whether all greens and yellows were used!
-                ...
+            elif self.prev_guesses and not all([m in guess_input for m in mandatory_letters]):
+                self.notify("Must use all letters marked green/yellow in previous guess.")
             else:
                 # Accept and score it.
                 poolz = compare_pools(guess_input, self.wordpool)
                 clueset = play(poolz, 6 - self.guess_n)
+
+                if all([c == "g" for c in clueset]):
+                    self.notify("Game over, not enough words left to finish!")
+                    self.gameover = True
+                    # ^ This stops processing further keypresses.
+
                 self.wordpool = determine_pool(guess_input, clueset, self.wordpool)
                 log.clear()
                 log.write(f"Cluelist leaves {len(self.wordpool)} words remaining.")
@@ -224,6 +239,11 @@ class GameApp(App):
                 self.guess_n += 1
                 self.loaded_guess = []
                 self.prev_guesses.append(guess_input)
+                self.last_clueset = clueset
+
+                if self.guess_n >= 6 and not all([c == "g" for c in clueset]):
+                    self.notify(f"You won! Still {len(self.wordpool)} words left in the pool.")
+                    self.gameover = True
 
         elif ev.character and ev.character.lower() in "abcdefghijklmniopqrstuvwxyz":
             if len(self.loaded_guess) < 5:
