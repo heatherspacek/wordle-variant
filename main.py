@@ -112,7 +112,7 @@ def play(pool_sizes: dict, turn: int):
 
 class GameApp(App):
     def compose(self) -> ComposeResult:
-        yield RichLog()
+        yield "Hello World"
 
     def on_key(self, event: events.key):
         pass
