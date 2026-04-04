@@ -1,4 +1,3 @@
-from textual import events
 from textual.app import App, ComposeResult
 # from textual.screen import Screen
 from textual.widgets import Static, RichLog
@@ -111,11 +110,13 @@ def play(pool_sizes: dict, turn: int):
 
 
 class GameApp(App):
-    def compose(self) -> ComposeResult:
-        yield "Hello World"
 
-    def on_key(self, event: events.key):
-        pass
+    def compose(self) -> ComposeResult:
+        yield Static("TITLE")
+        yield RichLog()
+
+    def on_key(self, event):
+        self.query_one(RichLog).write(event)
 
 
 if __name__ == "__main__":
